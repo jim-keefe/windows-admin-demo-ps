@@ -7,7 +7,7 @@ $runspacePool = [runspacefactory]::CreateRunspacePool(1, $rsThreadCount)
 $runspacePool.Open()
 $rsJobs = @()
 
-# This is the scriptblock that is going to run. In this example
+# This is the scriptblock that is going to run. In this example we get an input parameter, set a random sleep time and then return a message with the values.
 $rsScriptBlock = {
     Param ($x)
     $secondsWait = Get-Random -Maximum 5 -Minimum 1
