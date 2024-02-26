@@ -6,7 +6,6 @@ $rsMSecondWaitCheck = 300
 $targets = @("jojo1","win2022-001","win2019-001")
 $jsonoutput = "c:\temp\rs-sysinfo-$((New-Guid).guid).json"
 
-
 # Initiate a Runspace Pool
 $runspacePool = [runspacefactory]::CreateRunspacePool(1, $rsThreadCount)
 $runspacePool.Open()
