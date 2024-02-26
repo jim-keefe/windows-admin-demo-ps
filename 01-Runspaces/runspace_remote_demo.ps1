@@ -1,29 +1,29 @@
+# make sure that targets have winrm ports open and winrm is configured
+
 # Variables
 $rsThreadCount = 2
 $rsMSecondWaitCheck = 300
-$targets = @("win2022-001","win2019-002","jojo1")
+$targets = @("jojo1","win2022-001","win2019-001")
+$rsResults = @()
+$jsonoutput = "c:\temp\rs-sysinfo-$((New-Guid).guid).json"
 
 # Initiate a Runspace Pool
 $runspacePool = [runspacefactory]::CreateRunspacePool(1, $rsThreadCount)
 $runspacePool.Open()
 $rsJobs = @()
 
-# This is the scriptblock that is going to run. In this example we get an input parameter, set a random sleep time and then return a message with the values.
+# This is the scriptblock that is going to run. In this example we take the target param and get some basic system info from that system.
 $rsScriptBlock = {
     Param ($target)
-    $remoteSB = {
-        $computerSystemInfo = Get-WmiObject -Class Win32_ComputerSystem
-        $result = @{
-            computerName = $computerSystemInfo.PSComputerName
-            osCaption = $computerSystemInfo.Caption
-            memoryGB = $computerSystemInfo.TotalPhysicalMemory/1024/1024
-            processors = $computerSystemInfo.NumberOfProcessors
-            logicalProcs = $computerSystemInfo.NumberOfLogicalProcessors
-        }
-        return $result
+    $computerSystemInfo = Get-WmiObject -Class Win32_ComputerSystem -ComputerName $target
+    # Note: as a hash table this will not make a table with many instances so we type it as a pscustomobject
+    $result = [PSCustomObject]@{
+        computerName = $computerSystemInfo.PSComputerName
+        memoryGB = [int]($computerSystemInfo.TotalPhysicalMemory/1024/1024/1024)
+        processors = $computerSystemInfo.NumberOfProcessors
+        logicalProcs = $computerSystemInfo.NumberOfLogicalProcessors
     }
-    $remoteResult = invoke-command -ComputerName $target -ScriptBlock $remoteSB -ErrorAction SilentlyContinue
-    return $remoteResult
+    return $result
 }
 
 foreach ($target in $targets) {
@@ -55,12 +55,16 @@ while ($rsJobs.State.IsCompleted -contains $false) {
     foreach ($job in $rsJobs){
         if ($job.State.IsCompleted -and !$job.Processed){
             # This is where we get the return. We can record it or do some work with the results.
-            # NOTE: maybe we don't want to process each result as it comes in... we can set up another loop to process $rsJobs later
-            $job.Runspace.EndInvoke($job.State)
+            # We are adding each result to an array of results
+            $rsResults += $job.Runspace.EndInvoke($job.State)
             $job.Runspace.Dispose()
             $job.Processed = $true
         }
     }
 }
+
+$rsResults | Out-GridView
+$rsResults | convertto-json -depth 100 | set-content -Path $jsonoutput
+notepad.exe $jsonoutput
 
 $RunspacePool.Dispose()
