@@ -25,8 +25,8 @@ $rsScriptBlock = {
     # Create a powershell instance in the runspace pool and add properties such as the scriptblock to run and parameters
     $psRunscpace = [powershell]::Create()
     $psRunscpace.RunspacePool = $runspacePool
-    $psRunscpace.AddScript($rsScriptBlock)
-    $psRunscpace.AddParameters($rsParams)
+    [void]$psRunscpace.AddScript($rsScriptBlock)
+    [void]$psRunscpace.AddParameters($rsParams)
 
     # In the hash below we are basically putting the powershell runspace object and the invocation output into an object.
     # This technique allows us to keep the job and the output associated in the same object.
