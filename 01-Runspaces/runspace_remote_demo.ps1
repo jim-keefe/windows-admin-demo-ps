@@ -4,13 +4,14 @@
 $rsThreadCount = 2
 $rsMSecondWaitCheck = 300
 $targets = @("jojo1","win2022-001","win2019-001")
-$rsResults = @()
 $jsonoutput = "c:\temp\rs-sysinfo-$((New-Guid).guid).json"
+
 
 # Initiate a Runspace Pool
 $runspacePool = [runspacefactory]::CreateRunspacePool(1, $rsThreadCount)
 $runspacePool.Open()
 $rsJobs = @()
+$rsResults = @()
 
 # This is the scriptblock that is going to run. In this example we take the target param and get some basic system info from that system.
 $rsScriptBlock = {
